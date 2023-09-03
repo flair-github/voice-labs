@@ -2,7 +2,7 @@ import { OpenAI } from "openai";
 import { CreateChatCompletionRequestMessage } from "openai/resources/chat";
 
 const openai = new OpenAI({
-  apiKey: "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",
+  apiKey: "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",
 });
 
 // define initial message - the system telling OpenAI how to act
