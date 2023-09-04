@@ -4,6 +4,8 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 // import styles from "./page.module.css";
+import { FaAssistiveListeningSystems } from "react-icons/fa";
+import { RiSpeakFill } from "react-icons/ri";
 
 export default function Home() {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
@@ -66,13 +68,21 @@ export default function Home() {
       </h3>
       <section className='grid grid-cols-2 w-full'>
         <aside className='relative flex flex-col justify-center items-center h-96'>
-          <img src='polygon.svg' alt='polygon bg' className='absolute' />
-          <div
-            className={
-              "h-16 w-16 rounded-full bg-teal-900" +
-              (isRecording ? " animate-ping " : "")
-            }
-          ></div>
+          <img
+            src='pulse.svg'
+            alt='pulse bg'
+            className='absolute opacity-75 w-3/4'
+          />
+          <img src='polygon.svg' alt='polygon bg' className='absolute -mr-28' />
+          <div className='h-24 w-24 flex justify-center items-center relative'>
+            <div
+              className={
+                "h-16 w-16 rounded-full bg-teal-600" +
+                (isRecording ? " animate-ping " : "")
+              }
+            ></div>
+            <RiSpeakFill className='block mx-auto absolute text-white w-6 h-6' />
+          </div>
           <article className='absolute top-1/2 left-1/2 -ml-10 text-center'>
             <h4 className='mt-20 font-semibold'>You</h4>
             {isRecording && <p>Speaking...</p>}
@@ -80,18 +90,26 @@ export default function Home() {
         </aside>
         <aside className='relative flex flex-col justify-center items-center h-96'>
           <img
+            src='pulse.svg'
+            alt='pulse bg'
+            className='absolute opacity-75 w-3/4'
+          />
+          <img
             src='polygon.svg'
             alt='polygon bg'
-            className='absolute rotate-180'
+            className='absolute rotate-180 -ml-28'
           />
-          <div className={"h-16 w-16 rounded-full bg-sky-600"}></div>
+          <div className='h-24 w-24 flex justify-center items-center relative'>
+            <div className={"h-16 w-16 rounded-full bg-sky-600"}></div>
+            <FaAssistiveListeningSystems className='block mx-auto absolute text-white w-6 h-6' />
+          </div>
           <article className='absolute top-1/2 left-1/2 -ml-10 text-center'>
             <h4 className='mt-20 font-semibold'>Flair AI</h4>
             {isRecording && <p>Listening...</p>}
           </article>
         </aside>
       </section>
-      <section className='bg-white w-4/5 mx-auto rounded-t-lg border-2 border-sky-300 shadow grow p-5'>
+      <section className='bg-white w-4/5 mx-auto rounded-t-lg border-2 border-sky-300 shadow grow p-5 z-10'>
         <h5 className='font-semibold text-lg'>Transcription</h5>
       </section>
     </main>
