@@ -49,5 +49,6 @@ export function getDeepgramLiveConnection(
     "transcriptReceived",
     transcriptReceivedEventHandler
   );
+  deepgramLive.setMaxListeners(0);
   return deepgramLive;
 }
