@@ -39,20 +39,21 @@ server.listen(4000, () => {
   console.log("server listening on port 4000");
 });
 
+// Initiate Deepgram
 const deepgramLive = getDeepgramLiveConnection(async (data: string) => {
   const transcriptData = JSON.parse(data);
   if (transcriptData.type !== "Results") {
     return;
   }
   const transcript = transcriptData.channel.alternatives[0].transcript ?? "";
-  if (transcript) {
-    console.log(`transcript received: "${transcript}"`);
+  if (transcript && clientSocket) {
+    clientSocket.emit("transcriptData", transcript);
+    console.log(`transcript repeated: "${transcript}"`);
     const openAIResponse = await getOpenAIChatCompletion(transcript);
-    console.log(`openAIResponse: ${openAIResponse}`);
+    clientSocket.emit("openAIData", openAIResponse);
+    console.log(`openAIResponse repeated: ${openAIResponse}`);
     const elevenLabsAudio = await getElevenLabsAudio(openAIResponse);
-    if (clientSocket) {
-      clientSocket.emit("audioData", elevenLabsAudio);
-      console.log("sent audio data to frontend.");
-    }
+    clientSocket.emit("audioData", elevenLabsAudio);
+    console.log("sent audio data to frontend.");
   }
 });
