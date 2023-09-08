@@ -1,12 +1,12 @@
 import { OpenAI } from "openai";
-import { CreateChatCompletionRequestMessage } from "openai/resources/chat";
+import { ChatCompletionMessageParam } from "openai/resources/chat";
 
 const openai = new OpenAI({
   apiKey: "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",
 });
 
 // define initial message - the system telling OpenAI how to act
-const messages: Array<CreateChatCompletionRequestMessage> = [
+const messages: Array<ChatCompletionMessageParam> = [
   {
     role: "system",
     content:

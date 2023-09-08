@@ -11,5 +11,17 @@
   },
   "scripts": {
     "dev": "nodemon index.ts"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      ".gitignore",
+      "node_modules",
+      "package*",
+      "yarn*"
+    ],
+    "delay": 1000
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.1"
   }
 }
