@@ -2,71 +2,108 @@
 "use client";
 
 // import styles from "./page.module.css";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 import { FaAssistiveListeningSystems } from "react-icons/fa";
 import { RiSpeakFill } from "react-icons/ri";
+import {
+  FaRegFaceMeh,
+  FaRegFaceSmile,
+  FaRegFaceSmileBeam,
+} from "react-icons/fa6";
+import { Chip, Progress } from "@nextui-org/react";
 
-const dummyConversation = [
+function highlightSubstrings(
+  inputString: string,
+  substrings: string[]
+): string {
+  let replacedString = inputString;
+
+  substrings.forEach((substring) => {
+    // Use a regular expression with a capturing group to find and replace the substring
+    const regex = new RegExp(`(${substring})`, "gi");
+    replacedString = replacedString.replace(regex, "<mark>$1</mark>");
+  });
+
+  return replacedString;
+}
+
+function doesConversationTextIncludeSubstring(
+  conversation: { owner: "user" | "ai"; text: string; timestamp: Date }[],
+  substring: string
+): boolean {
+  const conversationText = conversation
+    .map((message) => message.text)
+    .join(" ");
+
+  // Create a regular expression with 'gi' flags for global and case-insensitive search
+  const regex = new RegExp(substring, "gi");
+
+  // Use the regex to test if the substring exists in the conversation text
+  return regex.test(conversationText);
+}
+
+const dummyConversation: {
+  owner: "user" | "ai";
+  text: string;
+  timestamp: Date;
+}[] = []; /* [
   {
     owner: "user",
-    text: "Hello, I have a question about my account.",
-    timestamp: new Date(),
+    text: "Hello, I'm interested in buying a property in the Oakwood neighborhood. Can you provide information about property prices in that area?",
+    timestamp: new Date(new Date().getTime() + 0 * 2000),
   },
   {
     owner: "ai",
-    text: "Hello! I'm here to help. What can I assist you with today?",
-    timestamp: new Date(),
+    text: "Of course! I'd be happy to help you with that. Oakwood is a desirable neighborhood with a range of property options. Do you have a specific type of property in mind, such as a house or an apartment?",
+    timestamp: new Date(new Date().getTime() + 1 * 2000),
   },
   {
     owner: "user",
-    text: "I noticed some unusual activity on my account. Can you check it for me?",
-    timestamp: new Date(),
+    text: "I'm looking for a house. Preferably a 3-bedroom house. What's the average price for a 3-bedroom house in Oakwood?",
+    timestamp: new Date(new Date().getTime() + 2 * 2000),
   },
   {
     owner: "ai",
-    text: "Of course, I'd be happy to assist you with that. Can you please provide me with your account number or username?",
-    timestamp: new Date(),
+    text: "Great choice! 3-bedroom houses in Oakwood typically range from $300,000 to $500,000, depending on the specific location and amenities. Would you like more details on available listings or any other information?",
+    timestamp: new Date(new Date().getTime() + 3 * 2000),
   },
   {
     owner: "user",
-    text: "My account number is 123456789.",
-    timestamp: new Date(),
+    text: "Could you provide me with a list of available 3-bedroom houses in Oakwood with prices and locations?",
+    timestamp: new Date(new Date().getTime() + 4 * 2000),
   },
   {
     owner: "ai",
-    text: "Thank you for providing your account number. Let me look that up for you. One moment, please.",
-    timestamp: new Date(),
+    text: "Certainly! I will gather the latest listings for you. Please give me a moment to fetch the information.",
+    timestamp: new Date(new Date().getTime() + 5 * 2000),
   },
   {
     owner: "ai",
-    text: "I've checked your account, and I see some recent transactions. Can you please specify which transactions seem unusual to you?",
-    timestamp: new Date(),
+    text: "Here are some of the 3-bedroom houses available in Oakwood:\n\n1. 123 Oakwood Drive - $350,000\n2. 456 Maple Lane - $480,000\n3. 789 Pine Street - $410,000",
+    timestamp: new Date(new Date().getTime() + 6 * 2000),
   },
   {
     owner: "user",
-    text: "There's a charge for $100 from a store I've never visited. I didn't make that transaction.",
-    timestamp: new Date(),
+    text: "Thank you for the information. Can you tell me more about the amenities in the Oakwood neighborhood and the nearby schools?",
+    timestamp: new Date(new Date().getTime() + 7 * 2000),
   },
   {
     owner: "ai",
-    text: "I'm sorry to hear that. It does look suspicious. I'll initiate an investigation into this matter and block the transaction. Your funds will be safe. Is there anything else I can assist you with?",
-    timestamp: new Date(),
+    text: "Certainly! Oakwood is known for its family-friendly environment and proximity to schools and parks. The neighborhood offers excellent schools, including Oakwood Elementary and Oakwood High School. Additionally, there are several parks, shopping centers, and restaurants nearby, making it a convenient and pleasant place to live.",
+    timestamp: new Date(new Date().getTime() + 8 * 2000),
   },
   {
     owner: "user",
-    text: "No, that's all for now. Thank you for your help.",
-    timestamp: new Date(),
+    text: "That sounds great! I'll consider Oakwood for my future home. Thank you for your assistance.",
+    timestamp: new Date(new Date().getTime() + 9 * 2000),
   },
   {
     owner: "ai",
-    text: "You're welcome! If you have any more questions or concerns in the future, please don't hesitate to reach out. Have a great day!",
-    timestamp: new Date(),
+    text: "You're very welcome! If you have any more questions or need further assistance in the future, feel free to reach out. Best of luck with your property search!",
+    timestamp: new Date(new Date().getTime() + 10 * 2000),
   },
-].map((_, i) => ({
-  ..._,
-  timestamp: new Date(_.timestamp.getTime() + i * 2000),
-}));
+] */
 
 const entities = ["property", "properties", "house", "lot", "price"];
 
@@ -80,6 +117,13 @@ export default function Home() {
   const [transcripts, setTranscripts] = useState<Transcript[]>(
     dummyConversation as Transcript[]
   );
+  const sentiment = useMemo(() => {
+    let value = 50;
+    const responseLength = transcripts.filter((t) => t.owner === "ai").length;
+    value = value + responseLength * 10;
+    if (value > 100) value = 100;
+    return value;
+  }, [transcripts]);
 
   useEffect(() => {
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
@@ -222,7 +266,11 @@ export default function Home() {
                   : " bg-sky-300 self-end text-right mr-3 rounded-tl-lg ")
               }
             >
-              <div className=''>{t.text}</div>
+              <p
+                dangerouslySetInnerHTML={{
+                  __html: highlightSubstrings(t.text, entities),
+                }}
+              ></p>
               <time className='text-xs'>
                 {t.timestamp.toLocaleTimeString()}
               </time>
@@ -231,15 +279,43 @@ export default function Home() {
           ))}
         </div>
         <div className='col-span-2 h-full flex flex-col space-y-5 pl-5'>
-          <div className='bg-white grow rounded-lg border-2 border-sky-300 p-5 shadow'>
+          <div className='bg-white rounded-lg border-2 border-sky-300 p-5 shadow'>
             <h5 className='font-semibold text-lg mb-4 text-gray-900'>
               Sentiment Analysis
             </h5>
+            <Progress
+              isStriped
+              color='primary'
+              valueLabel={sentiment <= 50 ? "Neutral" : "Positive"}
+              label={
+                sentiment < 60 ? (
+                  <FaRegFaceMeh className='h-6 w-6' />
+                ) : sentiment < 81 ? (
+                  <FaRegFaceSmile className='h-6 w-6' />
+                ) : (
+                  <FaRegFaceSmileBeam className='h-6 w-6' />
+                )
+              }
+              value={sentiment}
+              className=''
+              showValueLabel={true}
+            />
           </div>
           <div className='bg-white grow rounded-t-lg border-2 border-sky-300 p-5 overflow-y-scroll shadow'>
             <h5 className='font-semibold text-lg mb-4 text-gray-900'>
               Detected Entitites
             </h5>
+            <div className='flex flex-wrap gap-3'>
+              {entities
+                .filter((entity) =>
+                  doesConversationTextIncludeSubstring(transcripts, entity)
+                )
+                .map((text, idx) => (
+                  <Chip key={idx} color='primary' size='lg'>
+                    {text}
+                  </Chip>
+                ))}
+            </div>
           </div>
         </div>
       </section>
