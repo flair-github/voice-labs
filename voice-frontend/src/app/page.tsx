@@ -7,6 +7,69 @@ import { io } from "socket.io-client";
 import { FaAssistiveListeningSystems } from "react-icons/fa";
 import { RiSpeakFill } from "react-icons/ri";
 
+const dummyConversation = [
+  {
+    owner: "user",
+    text: "Hello, I have a question about my account.",
+    timestamp: new Date(),
+  },
+  {
+    owner: "ai",
+    text: "Hello! I'm here to help. What can I assist you with today?",
+    timestamp: new Date(),
+  },
+  {
+    owner: "user",
+    text: "I noticed some unusual activity on my account. Can you check it for me?",
+    timestamp: new Date(),
+  },
+  {
+    owner: "ai",
+    text: "Of course, I'd be happy to assist you with that. Can you please provide me with your account number or username?",
+    timestamp: new Date(),
+  },
+  {
+    owner: "user",
+    text: "My account number is 123456789.",
+    timestamp: new Date(),
+  },
+  {
+    owner: "ai",
+    text: "Thank you for providing your account number. Let me look that up for you. One moment, please.",
+    timestamp: new Date(),
+  },
+  {
+    owner: "ai",
+    text: "I've checked your account, and I see some recent transactions. Can you please specify which transactions seem unusual to you?",
+    timestamp: new Date(),
+  },
+  {
+    owner: "user",
+    text: "There's a charge for $100 from a store I've never visited. I didn't make that transaction.",
+    timestamp: new Date(),
+  },
+  {
+    owner: "ai",
+    text: "I'm sorry to hear that. It does look suspicious. I'll initiate an investigation into this matter and block the transaction. Your funds will be safe. Is there anything else I can assist you with?",
+    timestamp: new Date(),
+  },
+  {
+    owner: "user",
+    text: "No, that's all for now. Thank you for your help.",
+    timestamp: new Date(),
+  },
+  {
+    owner: "ai",
+    text: "You're welcome! If you have any more questions or concerns in the future, please don't hesitate to reach out. Have a great day!",
+    timestamp: new Date(),
+  },
+].map((_, i) => ({
+  ..._,
+  timestamp: new Date(_.timestamp.getTime() + i * 2000),
+}));
+
+const entities = ["property", "properties", "house", "lot", "price"];
+
 type Transcript = { owner: "user" | "ai"; text: string; timestamp: Date };
 
 export default function Home() {
@@ -14,7 +77,9 @@ export default function Home() {
     null
   );
   const [isRecording, setIsRecording] = useState(true);
-  const [transcripts, setTranscripts] = useState<Transcript[]>([]);
+  const [transcripts, setTranscripts] = useState<Transcript[]>(
+    dummyConversation as Transcript[]
+  );
 
   useEffect(() => {
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
@@ -77,14 +142,16 @@ export default function Home() {
   }, [isRecording, mediaRecorder]);
 
   return (
-    <main className='bg-blue-50 w-full h-screen pt-12 px-12 flex flex-col items-center'>
-      <img src='logo.png' alt='flair logo' className='h-12 w-12' />
+    <main className='relative bg-blue-50 w-full h-screen pt-10 px-10 flex flex-col items-center'>
+      <section className='absolute flex flex-col items-center'>
+        <img src='logo.png' alt='flair logo' className='h-12 w-12' />
+        <h3 className='font-semibold text-lg mt-3 text-gray-900'>
+          VoiceGPT - Your voice AI assistant
+        </h3>
+      </section>
 
-      <h3 className='font-semibold text-lg mt-3 text-gray-900'>
-        VoiceGPT - Your voice AI assistant
-      </h3>
-      <section className='grid grid-cols-2 w-full'>
-        <aside className='relative flex flex-col justify-center items-center h-96'>
+      <section className='grid grid-cols-2 w-full h-1/2'>
+        <aside className='relative flex flex-col justify-center items-center h-full'>
           <img
             src='pulse.svg'
             alt='pulse bg'
@@ -109,7 +176,7 @@ export default function Home() {
             {isRecording ? <p>Speaking...</p> : <p>Listening...</p>}
           </article>
         </aside>
-        <aside className='relative flex flex-col justify-center items-center h-96'>
+        <aside className='relative flex flex-col justify-center items-center h-full'>
           <img
             src='pulse.svg'
             alt='pulse bg'
@@ -139,25 +206,42 @@ export default function Home() {
           </article>
         </aside>
       </section>
-      <section className='bg-white w-4/5 mx-auto rounded-t-lg border-2 border-sky-300 shadow grow p-5 z-10 overflow-y-scroll'>
-        <h5 className='font-semibold text-lg mb-4 text-gray-900'>
-          Transcription
-        </h5>
-        {transcripts.map((t) => (
-          <div
-            key={t.timestamp.toTimeString()}
-            className={
-              "chat " + (t.owner === "user" ? "chat-start" : "chat-end")
-            }
-          >
-            <div className='chat-bubble chat-bubble-info'>{t.text}</div>
-            <div className='chat-footer'>
+
+      <section className='z-10 h-1/2 w-full grid grid-cols-5'>
+        <div className='bg-white col-span-3 rounded-t-lg border-2 border-sky-300 shadow p-5 h-full overflow-y-scroll flex flex-col'>
+          <h5 className='font-semibold text-lg mb-4 text-gray-900'>
+            Transcription
+          </h5>
+          {transcripts.map((t) => (
+            <div
+              key={t.timestamp.toTimeString()}
+              className={
+                "rounded-b-lg text-gray-600 p-3 my-2 w-fit max-w-md relative" +
+                (t.owner === "user"
+                  ? " bg-teal-300 self-start text-left ml-3 rounded-tr-lg "
+                  : " bg-sky-300 self-end text-right mr-3 rounded-tl-lg ")
+              }
+            >
+              <div className=''>{t.text}</div>
               <time className='text-xs'>
                 {t.timestamp.toLocaleTimeString()}
               </time>
+              {/* <div className='absolute border-5 border-teal-300 top-0 -left-2'></div> */}
             </div>
+          ))}
+        </div>
+        <div className='col-span-2 h-full flex flex-col space-y-5 pl-5'>
+          <div className='bg-white grow rounded-lg border-2 border-sky-300 p-5 shadow'>
+            <h5 className='font-semibold text-lg mb-4 text-gray-900'>
+              Sentiment Analysis
+            </h5>
           </div>
-        ))}
+          <div className='bg-white grow rounded-t-lg border-2 border-sky-300 p-5 overflow-y-scroll shadow'>
+            <h5 className='font-semibold text-lg mb-4 text-gray-900'>
+              Detected Entitites
+            </h5>
+          </div>
+        </div>
       </section>
     </main>
   );
